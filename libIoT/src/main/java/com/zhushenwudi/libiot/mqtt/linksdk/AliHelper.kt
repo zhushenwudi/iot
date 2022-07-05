@@ -22,7 +22,6 @@ import com.zhushenwudi.libiot.AppUtils.fromJson
 import com.zhushenwudi.libiot.AppUtils.toJson
 import com.zhushenwudi.libiot.model.*
 import com.zhushenwudi.libiot.mqtt.MQTTHelper
-import com.zhushenwudi.libiot.mqtt.emq.EMQHelper
 import com.zhushenwudi.libiot.service.TickTimeReceiver
 import dev.utils.app.ManifestUtils
 import dev.utils.app.NetWorkUtils
@@ -108,10 +107,10 @@ open class AliHelper(
     /**
      * 初始化阿里MQTT
      */
-    override fun initMqtt(group: String?) {
+    override fun initMqtt() {
         if (initial) {
             initial = false
-            group?.run { setGroup(this) }
+            group = readFileToString(sdcardPath + "group") ?: "dev"
             subscribeTopic.add(topicHeader + "cmd")
             MqttConfigure.setKeepAliveInterval(30)
             MqttConfigure.automaticReconnect = false
@@ -126,7 +125,9 @@ open class AliHelper(
         if (isFileExists(path)) {
             LinkUtil.deInit(notifyListener)
             val deviceSecret = readFileToString(path)
-            connectLink(productKey, productSecret, deviceSecret)
+            if (deviceSecret != null) {
+                connectLink(productKey, productSecret, deviceSecret)
+            }
         } else {
             registerDevice(productKey, productSecret, path)
         }
@@ -199,7 +200,7 @@ open class AliHelper(
                     while (!mqttConnected) {
                         withTimeoutOrNull(TIMEOUT) {
                             if (NetWorkUtils.isAvailableByPing()) {
-                                initMqtt(group)
+                                initMqtt()
                             } else {
                                 Log.d("aaa", "net disconnect...")
                             }
@@ -232,14 +233,14 @@ open class AliHelper(
      */
     override fun respCallBack(topic: String, message: String) {
         Log.e("aaa", "$topic - $message")
-        val command = AppUtils.fromJson<CommandDown>(message)
+        val command = fromJson<CommandDown>(message)
         command?.let { c ->
             when (c.cmd) {
                 "SetGroup" -> {
                     // 设置 Group
                     val group = c.data?.group
                     group?.run {
-                        val path = EMQHelper.sdcardPath + "group"
+                        val path = sdcardPath + "group"
                         createOrExistsFile(path)
                         writeFileFromString(path, this)
                         setGroup(this)

@@ -39,7 +39,7 @@ open class EMQHelper(
     /**
      * 连接 MQTT
      */
-    override fun initMqtt(group: String?) {
+    override fun initMqtt() {
         try {
             if (initial) {
                 initial = false

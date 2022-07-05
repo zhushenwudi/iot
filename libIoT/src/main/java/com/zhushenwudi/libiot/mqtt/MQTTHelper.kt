@@ -1,7 +1,7 @@
 package com.zhushenwudi.libiot.mqtt
 
 abstract class MQTTHelper {
-    open fun initMqtt(group: String?) {}
+    open fun initMqtt() {}
 
     open fun versionUp(versionName: String) {}
     open fun netOfflineUp(start: Long) {}

@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
             productKey = BuildConfig.LINK_PRODUCT_KEY,
             productSecret = BuildConfig.LINK_PRODUCT_SECRET
         )
-        aliHelper.initMqtt(null)
+        aliHelper.initMqtt()
 
 
         emqHelper = EMQHelper(
@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
             productKey = BuildConfig.EMQ_PRODUCT_KEY,
             url = BuildConfig.EMQ_URL
         )
-        emqHelper.initMqtt(null)
+        emqHelper.initMqtt()
     }
 
     override fun onStop() {
