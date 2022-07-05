@@ -217,7 +217,7 @@ open class AliHelper(
      */
     override fun mqttCallBack(status: Boolean) {
         if (status) {
-            versionUp(ManifestUtils.getAppVersionName(applicationContext.packageName))
+            versionUp(ManifestUtils.getAppVersionName())
             if (offlineStartTime != 0L) {
                 netOfflineUp(offlineStartTime)
                 offlineStartTime = 0L

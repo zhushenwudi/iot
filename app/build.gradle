@@ -17,6 +17,8 @@ android {
         applicationId "com.zhushenwudi.libiot"
         minSdk 21
         targetSdk 31
+        versionCode 1
+        versionName "1.0.0"
         buildConfigField "String", "LINK_PRODUCT_KEY", "\"${LINK_PRODUCT_KEY}\""
         buildConfigField "String", "LINK_PRODUCT_SECRET", "\"${LINK_PRODUCT_SECRET}\""
         buildConfigField "String", "EMQ_URL", "\"${EMQ_URL}\""
