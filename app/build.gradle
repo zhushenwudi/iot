@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+def LINK_PRODUCT_KEY = properties.getProperty('link_product_key')
+def LINK_PRODUCT_SECRET = properties.getProperty('link_product_secret')
+def EMQ_URL = properties.getProperty('emq_url')
+def EMQ_PRODUCT_KEY = properties.getProperty('emq_product_key')
+
+android {
+    compileSdk 31
+
+    defaultConfig {
+        applicationId "com.zhushenwudi.libiot"
+        minSdk 21
+        targetSdk 31
+        versionCode 1
+        versionName "1.0"
+        buildConfigField "String", "LINK_PRODUCT_KEY", "\"${LINK_PRODUCT_KEY}\""
+        buildConfigField "String", "LINK_PRODUCT_SECRET", "\"${LINK_PRODUCT_SECRET}\""
+        buildConfigField "String", "EMQ_URL", "\"${EMQ_URL}\""
+        buildConfigField "String", "EMQ_PRODUCT_KEY", "\"${EMQ_PRODUCT_KEY}\""
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation project(":libIoT")
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'io.github.afkt:DevAppX:2.3.6'
+}
