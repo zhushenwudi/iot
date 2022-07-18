@@ -28,12 +28,12 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        emqHelper = MyEMQHelper(
-            applicationContext = applicationContext,
-            productKey = BuildConfig.EMQ_PRODUCT_KEY,
-            url = BuildConfig.EMQ_URL
-        )
-        emqHelper.initMqtt()
+//        emqHelper = MyEMQHelper(
+//            applicationContext = applicationContext,
+//            productKey = BuildConfig.EMQ_PRODUCT_KEY,
+//            url = BuildConfig.EMQ_URL
+//        )
+//        emqHelper.initMqtt()
     }
 
     override fun onStop() {
