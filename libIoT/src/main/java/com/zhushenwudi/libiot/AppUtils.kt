@@ -8,6 +8,7 @@ import android.os.Process
 import com.google.gson.Gson
 import com.zhushenwudi.libiot.model.HeartBeatUp
 import dev.utils.app.MemoryUtils
+import dev.utils.app.ShellUtils
 import java.io.BufferedReader
 import java.io.FileInputStream
 import java.io.IOException
@@ -44,7 +45,7 @@ object AppUtils {
             rssi = rssi,
             module = module,
             cpu = getProcessCpuRate(),
-            memory = getMemoryRate()
+            memory = getMemoryRate1() ?: getMemoryRate2()
         )
     }
 
@@ -124,11 +125,32 @@ object AppUtils {
         return result
     }
 
-    private fun getMemoryRate(): String {
+    private fun getMemoryRate1(): String? {
+        val result = try {
+            val total = MemoryUtils.getTotalMemory() / 1000
+            val res = ShellUtils.execCmd("dumpsys meminfo | grep ${Process.myPid()}", true)
+            if (res.isSuccess3) {
+                val used = res.successMsg.split(":")[0].trim().uppercase()
+                    .replace("K", "").replace("B", "").toFloat()
+                if (used == 0f) {
+                    return null
+                }
+                100 * used / total
+            } else {
+                return null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+        return String.format("%.2f", result)
+    }
+
+    private fun getMemoryRate2(): String {
         val result = try {
             val total = MemoryUtils.getTotalMemory().toFloat()
             val avail = MemoryUtils.getAvailMemory().toFloat()
-            100 * (total - avail) / avail
+            100 * (total - avail) / total
         } catch (e: Exception) {
             e.printStackTrace()
             -1f

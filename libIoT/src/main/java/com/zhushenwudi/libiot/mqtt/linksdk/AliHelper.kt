@@ -170,11 +170,13 @@ open class AliHelper(
                     val response =
                         fromJson<ResponseModel<Map<String, String>>>(aResponse.data.toString())
                     response?.apply {
-                        val deviceSecret = data["deviceSecret"]
-                        if ("200" == code && !deviceSecret.isNullOrEmpty()) {
-                            createOrExistsFile(path)
-                            writeFileFromString(path, deviceSecret)
-                            connectLink(productKey, productSecret, deviceSecret)
+                        if ("200" == code) {
+                            val deviceSecret = data["deviceSecret"]
+                            if (!deviceSecret.isNullOrEmpty()) {
+                                createOrExistsFile(path)
+                                writeFileFromString(path, deviceSecret)
+                                connectLink(productKey, productSecret, deviceSecret)
+                            }
                         } else {
                             Log.d(TAG, "LINK SDK 注册失败: $code")
                         }
