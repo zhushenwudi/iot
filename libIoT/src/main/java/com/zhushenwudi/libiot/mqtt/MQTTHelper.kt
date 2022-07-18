@@ -1,18 +1,18 @@
 package com.zhushenwudi.libiot.mqtt
 
 abstract class MQTTHelper {
-    open fun initMqtt() {}
+    abstract fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)? = null)
 
-    open fun versionUp(versionName: String) {}
-    open fun netOfflineUp(start: Long) {}
-    open fun heartBeatUp() {}
+    abstract fun versionUp(versionName: String)
+    abstract fun netOfflineUp(start: Long)
+    abstract fun heartBeatUp()
 
-    open fun subscribe(topicList: Array<String>) {}
-    open fun publish(topic: String, msg: String) {}
-    open fun cancelSubscribe(topics: Array<String>) {}
+    abstract fun subscribe(topicList: Array<String>)
+    abstract fun publish(topic: String, msg: String)
+    abstract fun cancelSubscribe(topics: Array<String>)
 
-    open fun respCallBack(topic: String, message: String) {}
-    open fun mqttCallBack(status: Boolean) {}
+    abstract fun respCallBack(topic: String, message: String)
+    abstract fun mqttCallBack(status: Boolean)
 
-    open fun release() {}
+    abstract fun release()
 }

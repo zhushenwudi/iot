@@ -10,8 +10,7 @@ data class VersionUp(
     val devSN: String = Build.SERIAL,
     val time: Long = System.currentTimeMillis() / 1000,
     val type: String = "version",
-    val data: DataBean,
-    var group: String
+    val data: DataBean
 ) {
     @Keep
     data class DataBean(

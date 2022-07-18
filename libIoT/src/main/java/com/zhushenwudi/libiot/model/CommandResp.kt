@@ -11,8 +11,7 @@ data class CommandResp(
     val time: Long = System.currentTimeMillis() / 1000,
     var type: String,
     val data: DataBean,
-    var id: String,
-    var group: String
+    var id: String
 ) {
     @Keep
     data class DataBean(

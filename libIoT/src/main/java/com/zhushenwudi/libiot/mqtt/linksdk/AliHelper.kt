@@ -33,7 +33,7 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
-open class AliHelper(
+abstract class AliHelper(
     private val applicationContext: Context,
     private val productKey: String,
     private val productSecret: String,
@@ -46,8 +46,8 @@ open class AliHelper(
     private var scope: CoroutineScope? = null
     private val topicHeader = SEPARATOR + productKey + TOPIC_BEHIND
     private var timer: TickTimeReceiver? = null
-    private var group: String = "dev"
     private var offlineStartTime = 0L
+    private var mqttStatusCallback: ((status: Boolean) -> Unit)? = null
 
     private fun setMqttStatus(status: Boolean) {
         mqttConnected = status
@@ -107,10 +107,10 @@ open class AliHelper(
     /**
      * 初始化阿里MQTT
      */
-    override fun initMqtt() {
+    final override fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)?) {
+        this.mqttStatusCallback = mqttStatusCallback
         if (initial) {
             initial = false
-            group = readFileToString(sdcardPath + "group") ?: "dev"
             subscribeTopic.add(topicHeader + "cmd")
             MqttConfigure.setKeepAliveInterval(30)
             MqttConfigure.automaticReconnect = false
@@ -202,7 +202,7 @@ open class AliHelper(
                     while (!mqttConnected) {
                         withTimeoutOrNull(TIMEOUT) {
                             if (NetWorkUtils.isAvailableByPing()) {
-                                initMqtt()
+                                initMqtt(mqttStatusCallback)
                             } else {
                                 Log.d("aaa", "net disconnect...")
                             }
@@ -218,7 +218,8 @@ open class AliHelper(
     /**
      * mqtt状态回调
      */
-    override fun mqttCallBack(status: Boolean) {
+    final override fun mqttCallBack(status: Boolean) {
+        mqttStatusCallback?.invoke(status)
         if (status) {
             versionUp(ManifestUtils.getAppVersionName())
             if (offlineStartTime != 0L) {
@@ -227,30 +228,6 @@ open class AliHelper(
             }
         } else {
             offlineStartTime = System.currentTimeMillis()
-        }
-    }
-
-    /**
-     * 处理接到的消息
-     */
-    override fun respCallBack(topic: String, message: String) {
-        Log.e("aaa", "$topic - $message")
-        val command = fromJson<CommandDown>(message)
-        command?.let { c ->
-            when (c.cmd) {
-                "SetGroup" -> {
-                    // 设置 Group
-                    val group = c.data?.group
-                    group?.run {
-                        val path = sdcardPath + "group"
-                        createOrExistsFile(path)
-                        writeFileFromString(path, this)
-                        setGroup(this)
-                        respBySetGroup(c.id)
-                    }
-                }
-                else -> {}
-            }
         }
     }
 
@@ -269,50 +246,34 @@ open class AliHelper(
     /**
      * 版本上报
      */
-    override fun versionUp(versionName: String) {
+    final override fun versionUp(versionName: String) {
         val postVersion = topicHeader + "version"
-        val message = toJson(VersionUp(data = VersionUp.DataBean(versionName), group = group))
+        val message = toJson(VersionUp(data = VersionUp.DataBean(versionName)))
         publish(postVersion, message)
     }
 
     /**
      * 断线上报
      */
-    override fun netOfflineUp(start: Long) {
+    final override fun netOfflineUp(start: Long) {
         val postOffline = topicHeader + "offline"
-        val message = toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis()), group = group))
+        val message = toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis())))
         publish(postOffline, message)
     }
 
     /**
      * 心跳上报
      */
-    override fun heartBeatUp() {
+    final override fun heartBeatUp() {
         val postHeardBeats = topicHeader + "heartbeat"
-        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext), group = group))
+        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext)))
         publish(postHeardBeats, message)
-    }
-
-    /**
-     * 设置分组
-     */
-    fun setGroup(mGroup: String) {
-        group = mGroup
-    }
-
-    /**
-     * 响应设置分组成功
-     */
-    fun respBySetGroup(id: String) {
-        val postRespSetGroup = topicHeader + "cmd/response"
-        val message = toJson(CommandResp(type = "response", data = CommandResp.DataBean(cmd = "SetGroup", status = "OK"), id = id, group = group))
-        publish(postRespSetGroup, message)
     }
 
     /**
      * 订阅 topic 消息
      */
-    override fun subscribe(topicList: Array<String>) {
+    final override fun subscribe(topicList: Array<String>) {
         subscribeTopic.addAll(topicList)
         aliMQTT.subscribe(topicList)
     }
@@ -320,7 +281,7 @@ open class AliHelper(
     /**
      * 发布 topic 消息
      */
-    override fun publish(topic: String, msg: String) {
+    final override fun publish(topic: String, msg: String) {
         aliMQTT.publish(topic, msg)
     }
 
@@ -329,14 +290,14 @@ open class AliHelper(
      *
      * @param topics 多主题数组
      */
-    override fun cancelSubscribe(topics: Array<String>) {
+    final override fun cancelSubscribe(topics: Array<String>) {
         aliMQTT.cancelSubscribe(topics)
     }
 
     /**
      * 释放 mqtt 连接
      */
-    override fun release() {
+    final override fun release() {
         try {
             aliMQTT.cancelSubscribe(subscribeTopic.toTypedArray())
         } catch (e: Exception) {

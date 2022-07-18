@@ -8,20 +8,17 @@ import android.os.Environment
 import android.util.Log
 import com.zhushenwudi.libiot.AppUtils
 import com.zhushenwudi.libiot.AppUtils.toJson
-import com.zhushenwudi.libiot.model.CommandDown
 import com.zhushenwudi.libiot.model.HeartBeatUp
 import com.zhushenwudi.libiot.model.Offline
 import com.zhushenwudi.libiot.model.VersionUp
 import com.zhushenwudi.libiot.mqtt.MQTTHelper
 import com.zhushenwudi.libiot.service.TickTimeReceiver
 import dev.utils.app.ManifestUtils
-import dev.utils.common.FileIOUtils
-import dev.utils.common.FileUtils
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.*
 import java.io.File
 
-open class EMQHelper(
+abstract class EMQHelper(
     private val applicationContext: Context,
     private val productKey: String,
     private val url: String,
@@ -35,11 +32,13 @@ open class EMQHelper(
     private var timer: TickTimeReceiver? = null
     private var offlineStartTime = 0L
     private val topicHeader = File.separator + productKey + File.separator + SERIAL + "/user/group" + File.separator
+    private var mqttStatusCallback: ((status: Boolean) -> Unit)? = null
 
     /**
      * 连接 MQTT
      */
-    override fun initMqtt() {
+    final override fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)?) {
+        this.mqttStatusCallback = mqttStatusCallback
         try {
             if (initial) {
                 initial = false
@@ -106,7 +105,8 @@ open class EMQHelper(
     /**
      * mqtt状态回调
      */
-    override fun mqttCallBack(status: Boolean) {
+    final override fun mqttCallBack(status: Boolean) {
+        mqttStatusCallback?.invoke(status)
         if (status) {
             versionUp(ManifestUtils.getAppVersionName())
             if (offlineStartTime != 0L) {
@@ -115,28 +115,6 @@ open class EMQHelper(
             }
         } else {
             offlineStartTime = System.currentTimeMillis()
-        }
-    }
-
-    /**
-     * 处理接到的消息
-     */
-    override fun respCallBack(topic: String, message: String) {
-        Log.d(TAG, "$topic - $message")
-        val command = AppUtils.fromJson<CommandDown>(message)
-        command?.let { c ->
-            when (c.cmd) {
-                "SetGroup" -> {
-                    // 设置 Group
-                    val group = c.data?.group
-                    group?.run {
-                        val path = sdcardPath + "group"
-                        FileUtils.createOrExistsFile(path)
-                        FileIOUtils.writeFileFromString(path, this)
-                    }
-                }
-                else -> {}
-            }
         }
     }
 
@@ -175,36 +153,36 @@ open class EMQHelper(
     /**
      * 版本上报
      */
-    override fun versionUp(versionName: String) {
-        publish(topicHeader + "version", toJson(VersionUp(data = VersionUp.DataBean(versionName, productKey), group = "dev")))
+    final override fun versionUp(versionName: String) {
+        publish(topicHeader + "version", toJson(VersionUp(data = VersionUp.DataBean(versionName, productKey))))
     }
 
     /**
      * 断线上报
      */
-    override fun netOfflineUp(start: Long) {
-        publish(topicHeader + "offline", toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis()), group = "dev")))
+    final override fun netOfflineUp(start: Long) {
+        publish(topicHeader + "offline", toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis()))))
     }
 
     /**
      * 心跳上报
      */
-    override fun heartBeatUp() {
-        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext), group = "dev"))
+    final override fun heartBeatUp() {
+        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext)))
         publish(topicHeader + "heartbeat", message)
     }
 
     /**
      * 订阅 topic 消息
      */
-    override fun subscribe(topicList: Array<String>) {
+    final override fun subscribe(topicList: Array<String>) {
         subscribeList(topicList)
     }
 
     /**
      * 发布 topic 消息
      */
-    override fun publish(topic: String, msg: String) {
+    final override fun publish(topic: String, msg: String) {
         try {
             val message = MqttMessage()
             message.payload = msg.toByteArray()
@@ -220,7 +198,7 @@ open class EMQHelper(
      *
      * @param topics 多主题数组
      */
-    override fun cancelSubscribe(topics: Array<String>) {
+    final override fun cancelSubscribe(topics: Array<String>) {
         topics.forEach { topic ->
             try {
                 mqttClient?.unsubscribe(topic)
@@ -232,7 +210,7 @@ open class EMQHelper(
     /**
      * 释放 mqtt 连接
      */
-    override fun release() {
+    final override fun release() {
         try {
             cancelSubscribe(subscribeTopic.toTypedArray())
         } catch (e: Exception) {
@@ -256,6 +234,5 @@ open class EMQHelper(
     companion object {
         const val TAG = "mqtt"
         private val SERIAL = Build.SERIAL
-        val sdcardPath = Environment.getExternalStorageDirectory().absolutePath + File.separator
     }
 }

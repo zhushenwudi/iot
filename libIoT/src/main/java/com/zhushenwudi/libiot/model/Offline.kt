@@ -10,8 +10,7 @@ data class Offline(
     val devSN: String = Build.SERIAL,
     var time: Long = System.currentTimeMillis() / 1000,
     val type: String = "offline",
-    val data: DataBean = DataBean(0, 0),
-    var group: String
+    val data: DataBean = DataBean(0, 0)
 ) {
     @Keep
     data class DataBean(

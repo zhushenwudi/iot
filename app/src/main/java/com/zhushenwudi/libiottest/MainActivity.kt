@@ -2,6 +2,7 @@ package com.zhushenwudi.libiottest
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.zhushenwudi.libiot.BuildConfig
 import com.zhushenwudi.libiot.mqtt.MQTTHelper
 import com.zhushenwudi.libiot.mqtt.linksdk.AliHelper
@@ -17,15 +18,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        aliHelper = AliHelper(
+        aliHelper = MyAliHelper(
             applicationContext = applicationContext,
             productKey = BuildConfig.LINK_PRODUCT_KEY,
             productSecret = BuildConfig.LINK_PRODUCT_SECRET
         )
-        aliHelper.initMqtt()
+        aliHelper.initMqtt{
+            Log.e("aaa", "status: $it")
+        }
 
 
-        emqHelper = EMQHelper(
+        emqHelper = MyEMQHelper(
             applicationContext = applicationContext,
             productKey = BuildConfig.EMQ_PRODUCT_KEY,
             url = BuildConfig.EMQ_URL
