@@ -8,6 +8,6 @@ dependencyResolutionManagement {
         maven {url "https://repo.eclipse.org/content/repositories/paho-snapshots/"}
     }
 }
-rootProject.name = "Scione5Cabinet"
+rootProject.name = "iot"
 include ':app'
 include ':libIoT'
