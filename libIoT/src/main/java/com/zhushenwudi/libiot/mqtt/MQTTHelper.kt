@@ -1,6 +1,8 @@
 package com.zhushenwudi.libiot.mqtt
 
 abstract class MQTTHelper {
+    var topicHeader: String? = null
+
     abstract fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)? = null)
 
     abstract fun versionUp(versionName: String)

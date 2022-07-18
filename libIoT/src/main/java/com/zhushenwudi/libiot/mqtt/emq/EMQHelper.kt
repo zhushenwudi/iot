@@ -31,13 +31,13 @@ abstract class EMQHelper(
     var mqttClient: MqttAndroidClient? = null
     private var timer: TickTimeReceiver? = null
     private var offlineStartTime = 0L
-    private val topicHeader = File.separator + productKey + File.separator + SERIAL + "/user/group" + File.separator
     private var mqttStatusCallback: ((status: Boolean) -> Unit)? = null
 
     /**
      * 连接 MQTT
      */
     final override fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)?) {
+        topicHeader = File.separator + productKey + File.separator + SERIAL + "/user/group" + File.separator
         this.mqttStatusCallback = mqttStatusCallback
         try {
             if (initial) {

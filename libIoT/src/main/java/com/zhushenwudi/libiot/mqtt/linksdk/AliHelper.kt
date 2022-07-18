@@ -44,7 +44,6 @@ abstract class AliHelper(
     private var mqttConnected = false
     private val handleInit = AtomicBoolean()
     private var scope: CoroutineScope? = null
-    private val topicHeader = SEPARATOR + productKey + TOPIC_BEHIND
     private var timer: TickTimeReceiver? = null
     private var offlineStartTime = 0L
     private var mqttStatusCallback: ((status: Boolean) -> Unit)? = null
@@ -108,6 +107,7 @@ abstract class AliHelper(
      * 初始化阿里MQTT
      */
     final override fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)?) {
+        topicHeader = SEPARATOR + productKey + TOPIC_BEHIND
         this.mqttStatusCallback = mqttStatusCallback
         if (initial) {
             initial = false
