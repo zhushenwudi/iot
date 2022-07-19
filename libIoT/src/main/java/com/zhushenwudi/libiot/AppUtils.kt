@@ -130,8 +130,8 @@ object AppUtils {
             val total = MemoryUtils.getTotalMemory() / 1000
             val res = ShellUtils.execCmd("dumpsys meminfo | grep ${Process.myPid()}", true)
             if (res.isSuccess3) {
-                val used = res.successMsg.split(":")[0].trim().uppercase()
-                    .replace("K", "").replace("B", "").toFloat()
+                val used = res.successMsg.split(":")[0].trim().uppercase().replace("K", "")
+                    .replace("B", "").replace(",", "").toFloat()
                 if (used == 0f) {
                     return null
                 }
