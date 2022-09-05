@@ -4,6 +4,14 @@ plugins {
     id 'maven-publish'
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
 android {
     compileSdk 31
 
@@ -24,12 +32,23 @@ android {
 
     afterEvaluate {
         publishing {
+            repositories {
+                maven {
+                    name('nexus')
+                    url uri('https://nexus3.devops.intelab.cloud/repository/android-maven/')
+                    credentials {
+                        username(localProperties.getProperty("nexusName"))
+                        password(localProperties.getProperty("nexusPwd"))
+                    }
+                }
+            }
             publications {
                 release(MavenPublication) {
                     from components.release
-                    groupId = 'com.zhushenwudi.iot'
-                    artifactId = 'iot'
-                    version = '1.0.0'
+                    version '1.0.0'
+                    artifactId 'iot'
+                    groupId 'com.ilab.android'
+                    description 'init'
                 }
             }
         }
@@ -60,6 +79,6 @@ dependencies {
     implementation('com.aliyun.alink.linksdk:public-channel-core:0.7.7.1')
     implementation('com.aliyun.alink.linksdk:iot-device-manager:1.7.5.0')
 
-    implementation 'com.google.code.gson:gson:2.8.9'
-    compileOnly 'io.github.afkt:DevAppX:2.3.6'
+    implementation 'com.google.code.gson:gson:2.9.0'
+    compileOnly 'io.github.afkt:DevAppX:2.4.0'
 }
