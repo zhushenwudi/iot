@@ -45,7 +45,7 @@ android {
             publications {
                 release(MavenPublication) {
                     from components.release
-                    version '1.0.0'
+                    version '1.0.2'
                     artifactId 'iot'
                     groupId 'com.ilab.android'
                     description 'init'
@@ -65,15 +65,15 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.google.android.material:material:1.6.1'
     // MQTT
 
     implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1"
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.1'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
 
     implementation('com.aliyun.alink.linksdk:iot-linkkit:1.7.2')
     implementation('com.aliyun.alink.linksdk:public-channel-core:0.7.7.1')

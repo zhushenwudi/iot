@@ -37,7 +37,7 @@ abstract class EMQHelper(
      * 连接 MQTT
      */
     final override fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)?) {
-        topicHeader = File.separator + productKey + File.separator + SERIAL + "/user/group" + File.separator
+        topicHeader = File.separator + productKey + File.separator + SERIAL + "/user/"
         this.mqttStatusCallback = mqttStatusCallback
         try {
             if (initial) {
