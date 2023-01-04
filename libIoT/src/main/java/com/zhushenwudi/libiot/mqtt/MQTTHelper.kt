@@ -1,6 +1,7 @@
 package com.zhushenwudi.libiot.mqtt
 
 abstract class MQTTHelper {
+    var heartBeatInterval = 1
     var topicHeader: String? = null
 
     abstract fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)? = null)

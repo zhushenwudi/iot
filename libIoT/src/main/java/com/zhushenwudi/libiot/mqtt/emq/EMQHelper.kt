@@ -123,7 +123,7 @@ abstract class EMQHelper(
      */
     private fun startTimer() {
         if (timer == null) {
-            timer = TickTimeReceiver {
+            timer = TickTimeReceiver(heartBeatInterval) {
                 heartBeatUp()
             }
             applicationContext.registerReceiver(timer, IntentFilter(Intent.ACTION_TIME_TICK))

@@ -236,7 +236,7 @@ abstract class AliHelper(
      */
     private fun startTimer() {
         if (timer == null) {
-            timer = TickTimeReceiver {
+            timer = TickTimeReceiver(heartBeatInterval) {
                 heartBeatUp()
             }
             applicationContext.registerReceiver(timer, IntentFilter(Intent.ACTION_TIME_TICK))
@@ -322,6 +322,6 @@ abstract class AliHelper(
         private val sdcardPath = Environment.getExternalStorageDirectory().absolutePath + SEPARATOR
         const val TIMEOUT = 5000L
         private val SERIAL = Build.SERIAL
-        val TOPIC_BEHIND = SEPARATOR + SERIAL + SEPARATOR + "user" + SEPARATOR + "group" + SEPARATOR
+        val TOPIC_BEHIND = SEPARATOR + SERIAL + SEPARATOR + "user" + SEPARATOR
     }
 }
