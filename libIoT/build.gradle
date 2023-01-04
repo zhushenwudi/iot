@@ -45,7 +45,7 @@ android {
             publications {
                 release(MavenPublication) {
                     from components.release
-                    version '1.0.3-pre1'
+                    version '1.0.3-pre2'
                     artifactId 'iot'
                     groupId 'com.ilab.android'
                     description 'init'
@@ -66,7 +66,7 @@ android {
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.google.android.material:material:1.6.1'
     // MQTT
 
@@ -77,7 +77,7 @@ dependencies {
 
     implementation('com.aliyun.alink.linksdk:iot-linkkit:1.7.2')
     implementation('com.aliyun.alink.linksdk:public-channel-core:0.7.7.1')
-    implementation('com.aliyun.alink.linksdk:iot-device-manager:1.7.5.0')
+    api('com.aliyun.alink.linksdk:iot-device-manager:1.7.5.0')
 
     implementation 'com.google.code.gson:gson:2.9.0'
     compileOnly 'io.github.afkt:DevAppX:2.4.0'
