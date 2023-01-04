@@ -193,6 +193,7 @@ object LinkUtil {
                         }
                     }
                     if (data == 100) {
+                        Log.d(TAG, "下载完毕: ${otaFile.absolutePath}")
                         ADBUtils.installAppSilent(otaFile, "-r", true)
                     }
                 }
