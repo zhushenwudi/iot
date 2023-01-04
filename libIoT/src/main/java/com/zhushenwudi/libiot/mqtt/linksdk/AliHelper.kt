@@ -6,6 +6,7 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Environment
 import android.util.Log
+import com.aliyun.alink.dm.api.IOta
 import com.aliyun.alink.dm.model.ResponseModel
 import com.aliyun.alink.linkkit.api.ILinkKitConnectListener
 import com.aliyun.alink.linkkit.api.LinkKit
@@ -38,7 +39,7 @@ abstract class AliHelper(
     private val productKey: String,
     private val productSecret: String,
     private val subscribeTopic: MutableList<String> = mutableListOf()
-): MQTTHelper() {
+): MQTTHelper(), IOta.OtaListener {
 
     private var initial = true
     private var mqttConnected = false
@@ -47,6 +48,7 @@ abstract class AliHelper(
     private var timer: TickTimeReceiver? = null
     private var offlineStartTime = 0L
     private var mqttStatusCallback: ((status: Boolean) -> Unit)? = null
+    private var mOta: IOta? = null
 
     private fun setMqttStatus(status: Boolean) {
         mqttConnected = status
@@ -151,6 +153,8 @@ abstract class AliHelper(
                 override fun onInitDone(p0: Any?) {
                     // 注册 MQTT 服务
                     LinkKit.getInstance().registerOnPushListener(notifyListener)
+                    // 配置 OTA 服务
+                    configOTA()
                 }
             })
     }
@@ -244,6 +248,20 @@ abstract class AliHelper(
     }
 
     /**
+     * 配置 OTA
+     */
+    fun configOTA() {
+        mOta = LinkKit.getInstance().ota
+        val config = IOta.OtaConfig()
+        LinkUtil.configOTA(applicationContext, config)
+        mOta?.tryStartOta(config, this)
+    }
+
+    override fun onOtaProgress(step: Int, otaResult: IOta.OtaResult): Boolean {
+        return LinkUtil.observeOTA(step, otaResult, mOta)
+    }
+
+    /**
      * 版本上报
      */
     final override fun versionUp(versionName: String) {
@@ -298,6 +316,8 @@ abstract class AliHelper(
      * 释放 mqtt 连接
      */
     final override fun release() {
+        // 尝试结束 OTA
+        mOta?.tryStopOta()
         try {
             aliMQTT.cancelSubscribe(subscribeTopic.toTypedArray())
         } catch (e: Exception) {

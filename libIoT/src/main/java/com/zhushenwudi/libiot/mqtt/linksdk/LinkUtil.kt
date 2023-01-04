@@ -3,8 +3,11 @@ package com.zhushenwudi.libiot.mqtt.linksdk
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import com.aliyun.alink.dm.api.DeviceInfo
+import com.aliyun.alink.dm.api.IOta
 import com.aliyun.alink.dm.api.IoTApiClientConfig
+import com.aliyun.alink.dm.api.ResultCallback
 import com.aliyun.alink.linkkit.api.*
 import com.aliyun.alink.linksdk.cmp.connect.hubapi.HubApiRequest
 import com.aliyun.alink.linksdk.cmp.core.listener.IConnectNotifyListener
@@ -12,9 +15,14 @@ import com.aliyun.alink.linksdk.cmp.core.listener.IConnectSendListener
 import com.aliyun.alink.linksdk.id2.Id2ItlsSdk
 import com.aliyun.alink.linksdk.tmp.device.payload.ValueWrapper
 import com.aliyun.alink.linksdk.tools.AError
+import dev.utils.app.ADBUtils
+import dev.utils.app.ManifestUtils
+import java.io.File
 import java.util.*
 
 object LinkUtil {
+
+    private const val TAG = "ota"
 
     /**
      * 如果需要动态注册设备获取设备的deviceSecret， 可以参考本接口实现。
@@ -149,6 +157,53 @@ object LinkUtil {
                 callback.onInitDone(data)
             }
         })
+    }
+
+    /**
+     * 配置 OTA
+     */
+    fun configOTA(applicationContext: Context, mConfig: IOta.OtaConfig) {
+        val path = applicationContext.getDir("update", Context.MODE_PRIVATE).absolutePath + File.separator
+        val filePath = File(path, "new.apk").path
+        mConfig.otaFile = File(filePath)
+        mConfig.deviceVersion = ManifestUtils.getAppVersionName()
+    }
+
+    fun observeOTA(step: Int, otaResult: IOta.OtaResult, mOta: IOta?): Boolean {
+        var mProgress = 0
+        val code = otaResult.errorCode
+        if (code != IOta.NO_ERROR) {
+            Log.d(TAG, "OTA异常:$code")
+            return false
+        }
+        when (step) {
+            IOta.STEP_SUBSCRIBE -> {}
+            IOta.STEP_RCVD_OTA -> Log.d(TAG, "有新的OTA固件")
+            IOta.STEP_DOWNLOAD -> {
+                Log.d(TAG, "下载固件中")
+                val data = otaResult.data
+                if (data is Int) {
+                    if (mProgress != data) {
+                        mProgress = data
+                        if (mProgress % 10 == 0) {
+                            mOta?.reportProgress(data, "download", otaCallback)
+                        }
+                    }
+                    if (100 == data) {
+                        Log.d(TAG, "APK下载完成")
+                        ADBUtils.installAppSilent(IOta.OtaConfig().otaFile, "-r", true)
+                    }
+                }
+            }
+            IOta.STEP_REPORT_VERSION -> {
+                mOta?.reportVersion(ManifestUtils.getAppVersionName(), otaCallback)
+            }
+        }
+        return true
+    }
+
+    private val otaCallback = ResultCallback { error: Int, _: String? ->
+        Log.d(TAG, "上报版本: ${ManifestUtils.getAppVersionName()} " + if (error == ResultCallback.SUCCESS) "成功" else "失败")
     }
 
     /**
