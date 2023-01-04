@@ -45,7 +45,7 @@ android {
             publications {
                 release(MavenPublication) {
                     from components.release
-                    version '1.0.3-pre2'
+                    version '1.0.3-pre4'
                     artifactId 'iot'
                     groupId 'com.ilab.android'
                     description 'init'
@@ -69,7 +69,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.google.android.material:material:1.6.1'
     // MQTT
-
     implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"

@@ -23,6 +23,8 @@ import java.util.*
 object LinkUtil {
 
     private const val TAG = "ota"
+    private var progress = -1
+    private lateinit var otaFile: File
 
     /**
      * 如果需要动态注册设备获取设备的deviceSecret， 可以参考本接口实现。
@@ -164,8 +166,8 @@ object LinkUtil {
      */
     fun configOTA(applicationContext: Context, mConfig: IOta.OtaConfig) {
         val path = applicationContext.getDir("update", Context.MODE_PRIVATE).absolutePath + File.separator
-        val filePath = File(path, "new.apk").path
-        mConfig.otaFile = File(filePath)
+        mConfig.otaFile = File(path, "new.apk")
+        otaFile = mConfig.otaFile
         mConfig.deviceVersion = ManifestUtils.getAppVersionName()
     }
 
@@ -180,18 +182,18 @@ object LinkUtil {
             IOta.STEP_SUBSCRIBE -> {}
             IOta.STEP_RCVD_OTA -> Log.d(TAG, "有新的OTA固件")
             IOta.STEP_DOWNLOAD -> {
-                Log.d(TAG, "下载固件中")
                 val data = otaResult.data
                 if (data is Int) {
                     if (mProgress != data) {
                         mProgress = data
-                        if (mProgress % 10 == 0) {
+                        if (progress != mProgress && mProgress % 10 == 0) {
+                            progress = mProgress
+                            Log.d(TAG, "下载固件中 $mProgress")
                             mOta?.reportProgress(data, "download", otaCallback)
                         }
                     }
-                    if (100 == data) {
-                        Log.d(TAG, "APK下载完成")
-                        ADBUtils.installAppSilent(IOta.OtaConfig().otaFile, "-r", true)
+                    if (data == 100) {
+                        ADBUtils.installAppSilent(otaFile, "-r", true)
                     }
                 }
             }
@@ -202,8 +204,10 @@ object LinkUtil {
         return true
     }
 
-    private val otaCallback = ResultCallback { error: Int, _: String? ->
-        Log.d(TAG, "上报版本: ${ManifestUtils.getAppVersionName()} " + if (error == ResultCallback.SUCCESS) "成功" else "失败")
+    private val otaCallback = ResultCallback { error: Int, msg: String? ->
+        if (error == ResultCallback.ERROR) {
+            Log.d(TAG, "OTA异常: $msg")
+        }
     }
 
     /**
