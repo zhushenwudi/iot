@@ -10,6 +10,7 @@ data class HeartBeatUp(
     val devSN: String = Build.SERIAL,
     val time: Long = System.currentTimeMillis() / 1000,
     val type: String = "event",
+    val group: String,
     val data: DataBean
 ) {
     @Keep

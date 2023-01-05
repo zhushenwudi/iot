@@ -113,7 +113,7 @@ abstract class AliHelper(
         this.mqttStatusCallback = mqttStatusCallback
         if (initial) {
             initial = false
-            subscribeTopic.add(topicHeader + "cmd")
+            subscribeTopic.add(topicHeader?.replace("group/", "") + "cmd")
             MqttConfigure.setKeepAliveInterval(30)
             MqttConfigure.automaticReconnect = false
         }
@@ -266,7 +266,7 @@ abstract class AliHelper(
      */
     final override fun versionUp(versionName: String) {
         val postVersion = topicHeader + "version"
-        val message = toJson(VersionUp(data = VersionUp.DataBean(versionName)))
+        val message = toJson(VersionUp(data = VersionUp.DataBean(versionName), group = group))
         publish(postVersion, message)
     }
 
@@ -275,7 +275,7 @@ abstract class AliHelper(
      */
     final override fun netOfflineUp(start: Long) {
         val postOffline = topicHeader + "offline"
-        val message = toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis())))
+        val message = toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis()), group = group))
         publish(postOffline, message)
     }
 
@@ -284,7 +284,7 @@ abstract class AliHelper(
      */
     final override fun heartBeatUp() {
         val postHeardBeats = topicHeader + "heartbeat"
-        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext)))
+        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext), group = group))
         publish(postHeardBeats, message)
     }
 
@@ -342,6 +342,6 @@ abstract class AliHelper(
         private val sdcardPath = Environment.getExternalStorageDirectory().absolutePath + SEPARATOR
         const val TIMEOUT = 5000L
         private val SERIAL = Build.SERIAL
-        val TOPIC_BEHIND = SEPARATOR + SERIAL + SEPARATOR + "user" + SEPARATOR
+        val TOPIC_BEHIND = "$SEPARATOR$SERIAL/user/group/"
     }
 }

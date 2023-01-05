@@ -37,12 +37,12 @@ abstract class EMQHelper(
      * 连接 MQTT
      */
     final override fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)?) {
-        topicHeader = File.separator + productKey + File.separator + SERIAL + "/user/"
+        topicHeader = File.separator + productKey + File.separator + SERIAL + "/user/group/"
         this.mqttStatusCallback = mqttStatusCallback
         try {
             if (initial) {
                 initial = false
-                subscribeTopic.add(topicHeader + "cmd")
+                subscribeTopic.add(topicHeader?.replace("group/", "") + "cmd")
             }
             if (mqttClient != null) {
                 return
@@ -154,21 +154,21 @@ abstract class EMQHelper(
      * 版本上报
      */
     final override fun versionUp(versionName: String) {
-        publish(topicHeader + "version", toJson(VersionUp(data = VersionUp.DataBean(versionName, productKey))))
+        publish(topicHeader + "version", toJson(VersionUp(data = VersionUp.DataBean(versionName, productKey), group = group)))
     }
 
     /**
      * 断线上报
      */
     final override fun netOfflineUp(start: Long) {
-        publish(topicHeader + "offline", toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis()))))
+        publish(topicHeader + "offline", toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis()), group = group)))
     }
 
     /**
      * 心跳上报
      */
     final override fun heartBeatUp() {
-        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext)))
+        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext), group = group))
         publish(topicHeader + "heartbeat", message)
     }
 
