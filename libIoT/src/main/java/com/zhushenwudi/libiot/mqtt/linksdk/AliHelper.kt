@@ -18,12 +18,14 @@ import com.aliyun.alink.linksdk.cmp.core.base.ConnectState
 import com.aliyun.alink.linksdk.cmp.core.listener.IConnectNotifyListener
 import com.aliyun.alink.linksdk.cmp.core.listener.IConnectSendListener
 import com.aliyun.alink.linksdk.tools.AError
+import com.google.gson.JsonObject
 import com.zhushenwudi.libiot.AppUtils
 import com.zhushenwudi.libiot.AppUtils.fromJson
 import com.zhushenwudi.libiot.AppUtils.toJson
 import com.zhushenwudi.libiot.model.*
 import com.zhushenwudi.libiot.mqtt.MQTTHelper
 import com.zhushenwudi.libiot.service.TickTimeReceiver
+import dev.utils.app.ADBUtils
 import dev.utils.app.ManifestUtils
 import dev.utils.app.NetWorkUtils
 import dev.utils.common.FileIOUtils.readFileToString
@@ -38,8 +40,8 @@ abstract class AliHelper(
     private val applicationContext: Context,
     private val productKey: String,
     private val productSecret: String,
-    private val subscribeTopic: MutableList<String> = mutableListOf()
-): MQTTHelper(), IOta.OtaListener {
+    private val subscribeTopic: MutableSet<String> = mutableSetOf()
+) : MQTTHelper(), IOta.OtaListener {
 
     private var initial = true
     private var mqttConnected = false
@@ -49,6 +51,9 @@ abstract class AliHelper(
     private var offlineStartTime = 0L
     private var mqttStatusCallback: ((status: Boolean) -> Unit)? = null
     private var mOta: IOta? = null
+
+    lateinit var cmdTopic: String
+    private lateinit var ntpTopic: String
 
     private fun setMqttStatus(status: Boolean) {
         mqttConnected = status
@@ -109,11 +114,14 @@ abstract class AliHelper(
      * 初始化阿里MQTT
      */
     final override fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)?) {
-        topicHeader = SEPARATOR + productKey + TOPIC_BEHIND
+        topicHeader = "/$productKey/$SERIAL/user/group/"
         this.mqttStatusCallback = mqttStatusCallback
         if (initial) {
             initial = false
-            subscribeTopic.add(topicHeader?.replace("group/", "") + "cmd")
+            cmdTopic = topicHeader?.replace("group/", "") + "cmd"
+            ntpTopic = "/ext/ntp/${productKey}/$SERIAL/response"
+            subscribeTopic.add(cmdTopic)
+            subscribeTopic.add(ntpTopic)
             MqttConfigure.setKeepAliveInterval(30)
             MqttConfigure.automaticReconnect = false
         }
@@ -155,6 +163,10 @@ abstract class AliHelper(
                     LinkKit.getInstance().registerOnPushListener(notifyListener)
                     // 配置 OTA 服务
                     configOTA()
+                    // 向ntp服务器请求
+                    val obj = JsonObject()
+                    obj.addProperty("deviceSendTime", System.currentTimeMillis())
+                    publish("/ext/ntp/${productKey}/${SERIAL}/request", toJson(obj))
                 }
             })
     }
@@ -275,7 +287,12 @@ abstract class AliHelper(
      */
     final override fun netOfflineUp(start: Long) {
         val postOffline = topicHeader + "offline"
-        val message = toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis()), group = group))
+        val message = toJson(
+            Offline(
+                data = Offline.DataBean(start = start, end = System.currentTimeMillis()),
+                group = group
+            )
+        )
         publish(postOffline, message)
     }
 
@@ -284,7 +301,12 @@ abstract class AliHelper(
      */
     final override fun heartBeatUp() {
         val postHeardBeats = topicHeader + "heartbeat"
-        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext), group = group))
+        val message = toJson(
+            HeartBeatUp(
+                data = AppUtils.genHeartBeatDataBean(applicationContext),
+                group = group
+            )
+        )
         publish(postHeardBeats, message)
     }
 
@@ -336,12 +358,31 @@ abstract class AliHelper(
         }
     }
 
+    override fun respCallBack(topic: String, message: String) {
+        if (topic == ntpTopic) {
+            val dr = System.currentTimeMillis()
+            try {
+                val resp = fromJson<TimestampResp>(message)
+                resp?.run {
+                    val sr = serverRecvTime.toLongOrNull()
+                    val ss = serverSendTime.toLongOrNull()
+                    val ds = deviceSendTime.toLongOrNull()
+                    if (sr != null && ss != null && ds != null) {
+                        val trulyTimestamp = (sr + ss + dr - ds) / 2
+                        ADBUtils.setSystemTime2(trulyTimestamp)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     companion object {
         const val TAG = "mqtt"
         private val SEPARATOR: String = File.separator
         private val sdcardPath = Environment.getExternalStorageDirectory().absolutePath + SEPARATOR
         const val TIMEOUT = 5000L
         private val SERIAL = Build.SERIAL
-        val TOPIC_BEHIND = "$SEPARATOR$SERIAL/user/group/"
     }
 }

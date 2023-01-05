@@ -27,7 +27,6 @@ class MainActivity : AppCompatActivity() {
             Log.e("aaa", "status: $it")
         }
 
-
 //        emqHelper = MyEMQHelper(
 //            applicationContext = applicationContext,
 //            productKey = BuildConfig.EMQ_PRODUCT_KEY,

@@ -14,6 +14,10 @@ class MyEMQHelper(
 ) {
 
     override fun respCallBack(topic: String, message: String) {
+        when (topic) {
+            cmdTopic -> {
 
+            }
+        }
     }
 }

@@ -4,13 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import android.os.Environment
 import android.util.Log
 import com.zhushenwudi.libiot.AppUtils
 import com.zhushenwudi.libiot.AppUtils.toJson
-import com.zhushenwudi.libiot.model.HeartBeatUp
-import com.zhushenwudi.libiot.model.Offline
-import com.zhushenwudi.libiot.model.VersionUp
+import com.zhushenwudi.libiot.model.*
 import com.zhushenwudi.libiot.mqtt.MQTTHelper
 import com.zhushenwudi.libiot.service.TickTimeReceiver
 import dev.utils.app.ManifestUtils
@@ -24,7 +21,7 @@ abstract class EMQHelper(
     private val url: String,
     private val username: String? = "public",
     private val password: String? = "admin",
-    private val subscribeTopic: MutableList<String> = mutableListOf()
+    private val subscribeTopic: MutableSet<String> = mutableSetOf()
 ): MQTTHelper() {
 
     private var initial = true
@@ -32,6 +29,8 @@ abstract class EMQHelper(
     private var timer: TickTimeReceiver? = null
     private var offlineStartTime = 0L
     private var mqttStatusCallback: ((status: Boolean) -> Unit)? = null
+
+    lateinit var cmdTopic: String
 
     /**
      * 连接 MQTT
@@ -42,7 +41,8 @@ abstract class EMQHelper(
         try {
             if (initial) {
                 initial = false
-                subscribeTopic.add(topicHeader?.replace("group/", "") + "cmd")
+                cmdTopic = topicHeader?.replace("group/", "") + "cmd"
+                subscribeTopic.add(cmdTopic)
             }
             if (mqttClient != null) {
                 return
