@@ -4,8 +4,20 @@ import androidx.annotation.Keep
 
 @Keep
 data class CommandReq<T>(
-    val devSN: String,
+    val id: String,
     val cmd: String,
-    val data: T,
-    val id: String
-)
+    val data: T?
+) {
+    @Keep
+    data class VersionInfo(
+        val version: String?,
+        val url: String?,
+        val md5: String?
+    )
+
+    @Keep
+    data class LogReqBean(
+        val begin: String,
+        val end: String
+    )
+}

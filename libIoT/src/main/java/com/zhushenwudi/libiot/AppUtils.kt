@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Process
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.zhushenwudi.libiot.model.HeartBeatUp
 import dev.utils.app.MemoryUtils
 import dev.utils.app.ShellUtils
@@ -19,7 +20,12 @@ object AppUtils {
 
     // json 字符串 -> 对象
     inline fun <reified T : Any> fromJson(json: String): T? {
-        return gson.fromJson(json, T::class.java)
+        return try {
+            val type = object : TypeToken<T>() {}.type
+            return gson.fromJson(json, type)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     // 对象 -> json 字符串

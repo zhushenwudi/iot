@@ -14,30 +14,8 @@ class MyAliHelper(
 ) : AliHelper(
     applicationContext = applicationContext,
     productKey = productKey,
-    productSecret = productSecret
-) {
-    override fun respCallBack(topic: String, message: String) {
-        // ntp服务在super里面实现
-        super.respCallBack(topic, message)
-        try {
-            when (topic) {
-                cmdTopic -> {
-                    fromJson<CommandReq<Any>>(message)?.run {
-                        when (cmd) {
-                            "QueryLog" -> {
-                                val bean = data as LogReqBean
-                                commandResp(id = id, cmd = cmd, status = "OK")
-                                // 获取日志中...
-
-                                // 发送日志
-                                queryLog(id, begin = bean.begin, end = bean.end, arrayListOf())
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    productSecret = productSecret,
+    queryLogFunc = { start, end ->
+        arrayListOf("111", "222")
     }
-}
+)

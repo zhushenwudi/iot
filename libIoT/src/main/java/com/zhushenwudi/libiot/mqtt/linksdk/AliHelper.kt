@@ -40,6 +40,7 @@ abstract class AliHelper(
     private val applicationContext: Context,
     private val productKey: String,
     private val productSecret: String,
+    private val queryLogFunc: ((start: Long, end: Long) -> ArrayList<String>)? = null,
     private val subscribeTopic: MutableSet<String> = mutableSetOf()
 ) : MQTTHelper(), IOta.OtaListener {
 
@@ -359,22 +360,48 @@ abstract class AliHelper(
     }
 
     override fun respCallBack(topic: String, message: String) {
-        if (topic == ntpTopic) {
-            val dr = System.currentTimeMillis()
-            try {
-                val resp = fromJson<TimestampResp>(message)
-                resp?.run {
-                    val sr = serverRecvTime.toLongOrNull()
-                    val ss = serverSendTime.toLongOrNull()
-                    val ds = deviceSendTime.toLongOrNull()
-                    if (sr != null && ss != null && ds != null) {
-                        val trulyTimestamp = (sr + ss + dr - ds) / 2
-                        ADBUtils.setSystemTime2(trulyTimestamp)
+        try {
+            when (topic) {
+                ntpTopic -> {
+                    val dr = System.currentTimeMillis()
+                    val resp = fromJson<TimestampResp>(message)
+                    resp?.run {
+                        val sr = serverRecvTime.toLongOrNull()
+                        val ss = serverSendTime.toLongOrNull()
+                        val ds = deviceSendTime.toLongOrNull()
+                        if (sr != null && ss != null && ds != null) {
+                            val trulyTimestamp = (sr + ss + dr - ds) / 2
+                            ADBUtils.setSystemTime2(trulyTimestamp)
+                        }
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+
+                cmdTopic -> {
+                    fromJson<CommandReq<Any>>(message)?.run {
+                        when (cmd) {
+                            "QueryLog" -> {
+                                fromJson<CommandReq<CommandReq.LogReqBean>>(message)?.run {
+                                    data?.run {
+                                        val begin = begin.toLongOrNull() ?: 0
+                                        val end = end.toLongOrNull() ?: 0
+
+                                        commandResp(id = id, cmd = cmd, status = "OK")
+                                        val logs = queryLogFunc?.invoke(begin, end)
+                                        queryLog(
+                                            id = id,
+                                            begin = begin,
+                                            end = end,
+                                            logs = logs ?: arrayListOf()
+                                        )
+                                    }
+                                }
+                            }
+                            else -> {}
+                        }
+                    }
+                }
             }
+        } catch (ignored: Exception) {
         }
     }
 

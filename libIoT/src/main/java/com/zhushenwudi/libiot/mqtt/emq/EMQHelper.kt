@@ -6,11 +6,14 @@ import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
 import com.zhushenwudi.libiot.AppUtils
+import com.zhushenwudi.libiot.AppUtils.fromJson
 import com.zhushenwudi.libiot.AppUtils.toJson
 import com.zhushenwudi.libiot.model.*
 import com.zhushenwudi.libiot.mqtt.MQTTHelper
 import com.zhushenwudi.libiot.service.TickTimeReceiver
+import dev.utils.app.DeviceUtils
 import dev.utils.app.ManifestUtils
+import io.github.g00fy2.versioncompare.Version
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.*
 import java.io.File
@@ -21,6 +24,8 @@ abstract class EMQHelper(
     private val url: String,
     private val username: String? = "public",
     private val password: String? = "admin",
+    private val updateCallback: ((md5: String, url: String) -> Unit)? = null,
+    private val queryLogFunc: ((start: Long, end: Long) -> ArrayList<String>)? = null,
     private val subscribeTopic: MutableSet<String> = mutableSetOf()
 ): MQTTHelper() {
 
@@ -228,6 +233,50 @@ abstract class EMQHelper(
         } catch (e: Exception) {
         } finally {
             timer = null
+        }
+    }
+
+    override fun respCallBack(topic: String, message: String) {
+        if (topic == cmdTopic) {
+            try {
+                fromJson<CommandReq<Any>>(message)?.run {
+                    when (cmd) {
+                        "update" -> {
+                            // 版本升级
+                            fromJson<CommandReq<CommandReq.VersionInfo>>(message)?.run {
+                                data?.run {
+                                    if ("armeabi-v7a" in DeviceUtils.getABIs()) {
+                                        if (Version(dev.utils.app.AppUtils.getAppVersionName()) < Version(version)) {
+                                            if (url != null && md5 != null) {
+                                                updateCallback?.invoke(md5, url)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        "QueryLog" -> {
+                            fromJson<CommandReq<CommandReq.LogReqBean>>(message)?.run {
+                                data?.run {
+                                    val begin = begin.toLongOrNull() ?: 0
+                                    val end = end.toLongOrNull() ?: 0
+
+                                    commandResp(id = id, cmd = cmd, status = "OK")
+                                    val logs = queryLogFunc?.invoke(begin, end)
+                                    queryLog(
+                                        id = id,
+                                        begin = begin,
+                                        end = end,
+                                        logs = logs ?: arrayListOf()
+                                    )
+                                }
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+            } catch (ignored: Exception) {
+            }
         }
     }
 

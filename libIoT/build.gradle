@@ -45,7 +45,7 @@ android {
             publications {
                 release(MavenPublication) {
                     from components.release
-                    version '1.0.5-pre3'
+                    version '1.0.5'
                     artifactId 'iot'
                     groupId 'com.ilab.android'
                     description 'init'
@@ -80,4 +80,5 @@ dependencies {
 
     implementation 'com.google.code.gson:gson:2.9.0'
     compileOnly 'io.github.afkt:DevAppX:2.4.0'
+    compileOnly 'io.github.g00fy2:versioncompare:1.5.0'
 }

@@ -10,10 +10,14 @@ class MyEMQHelper(
 ): EMQHelper(
     applicationContext = applicationContext,
     productKey = productKey,
-    url = url
+    url = url,
+    queryLogFunc = { start, end ->
+        arrayListOf("111", "222")
+    }
 ) {
 
     override fun respCallBack(topic: String, message: String) {
+        super.respCallBack(topic, message)
         when (topic) {
             cmdTopic -> {
 
