@@ -10,11 +10,13 @@ import com.zhushenwudi.libiot.mqtt.linksdk.AliHelper
 class MyAliHelper(
     applicationContext: Context,
     productKey: String,
-    productSecret: String
+    productSecret: String,
+    sku: String
 ) : AliHelper(
     applicationContext = applicationContext,
     productKey = productKey,
     productSecret = productSecret,
+    sku = sku,
     queryLogFunc = { start, end ->
         arrayListOf("111", "222")
     }

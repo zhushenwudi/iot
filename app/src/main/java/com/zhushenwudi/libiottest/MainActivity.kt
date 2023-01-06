@@ -21,7 +21,8 @@ class MainActivity : AppCompatActivity() {
         aliHelper = MyAliHelper(
             applicationContext = applicationContext,
             productKey = BuildConfig.LINK_PRODUCT_KEY,
-            productSecret = BuildConfig.LINK_PRODUCT_SECRET
+            productSecret = BuildConfig.LINK_PRODUCT_SECRET,
+            sku = BuildConfig.LINK_PRODUCT_KEY
         )
         aliHelper.initMqtt{
             Log.e("aaa", "status: $it")

@@ -45,7 +45,7 @@ android {
             publications {
                 release(MavenPublication) {
                     from components.release
-                    version '1.0.5'
+                    version '1.0.6-pre1'
                     artifactId 'iot'
                     groupId 'com.ilab.android'
                     description 'init'

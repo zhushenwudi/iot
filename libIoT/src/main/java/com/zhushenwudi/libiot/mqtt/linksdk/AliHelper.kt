@@ -40,6 +40,7 @@ abstract class AliHelper(
     private val applicationContext: Context,
     private val productKey: String,
     private val productSecret: String,
+    private val sku: String,
     private val queryLogFunc: ((start: Long, end: Long) -> ArrayList<String>)? = null,
     private val subscribeTopic: MutableSet<String> = mutableSetOf()
 ) : MQTTHelper(), IOta.OtaListener {
@@ -238,7 +239,7 @@ abstract class AliHelper(
     final override fun mqttCallBack(status: Boolean) {
         mqttStatusCallback?.invoke(status)
         if (status) {
-            versionUp(ManifestUtils.getAppVersionName())
+            versionUp(versionName = ManifestUtils.getAppVersionName(), sku = sku)
             if (offlineStartTime != 0L) {
                 netOfflineUp(offlineStartTime)
                 offlineStartTime = 0L
@@ -277,9 +278,9 @@ abstract class AliHelper(
     /**
      * 版本上报
      */
-    final override fun versionUp(versionName: String) {
+    final override fun versionUp(versionName: String, sku: String) {
         val postVersion = topicHeader + "version"
-        val message = toJson(VersionUp(data = VersionUp.DataBean(versionName), group = group))
+        val message = toJson(VersionUp(data = VersionUp.DataBean(firmware = versionName, sku = sku), group = group))
         publish(postVersion, message)
     }
 

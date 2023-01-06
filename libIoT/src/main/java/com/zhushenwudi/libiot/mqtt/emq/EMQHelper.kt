@@ -24,6 +24,7 @@ abstract class EMQHelper(
     private val url: String,
     private val username: String? = "public",
     private val password: String? = "admin",
+    private val sku: String = productKey,
     private val updateCallback: ((md5: String, url: String) -> Unit)? = null,
     private val queryLogFunc: ((start: Long, end: Long) -> ArrayList<String>)? = null,
     private val subscribeTopic: MutableSet<String> = mutableSetOf()
@@ -113,7 +114,7 @@ abstract class EMQHelper(
     final override fun mqttCallBack(status: Boolean) {
         mqttStatusCallback?.invoke(status)
         if (status) {
-            versionUp(ManifestUtils.getAppVersionName())
+            versionUp(versionName = ManifestUtils.getAppVersionName(), sku = sku)
             if (offlineStartTime != 0L) {
                 netOfflineUp(offlineStartTime)
                 offlineStartTime = 0L
@@ -158,8 +159,8 @@ abstract class EMQHelper(
     /**
      * 版本上报
      */
-    final override fun versionUp(versionName: String) {
-        publish(topicHeader + "version", toJson(VersionUp(data = VersionUp.DataBean(versionName, productKey), group = group)))
+    final override fun versionUp(versionName: String, sku: String) {
+        publish(topicHeader + "version", toJson(VersionUp(data = VersionUp.DataBean(firmware = versionName, sku = sku), group = group)))
     }
 
     /**

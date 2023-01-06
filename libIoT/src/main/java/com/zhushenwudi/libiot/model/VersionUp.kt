@@ -16,6 +16,6 @@ data class VersionUp(
     @Keep
     data class DataBean(
         var firmware: String,
-        var sku: String? = null
+        var sku: String
     )
 }

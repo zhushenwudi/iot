@@ -12,7 +12,7 @@ abstract class MQTTHelper {
 
     abstract fun initMqtt(mqttStatusCallback: ((status: Boolean) -> Unit)? = null)
 
-    abstract fun versionUp(versionName: String)
+    abstract fun versionUp(versionName: String, sku: String)
     abstract fun netOfflineUp(start: Long)
     abstract fun heartBeatUp()
 
