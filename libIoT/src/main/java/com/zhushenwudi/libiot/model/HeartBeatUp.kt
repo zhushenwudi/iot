@@ -19,6 +19,6 @@ data class HeartBeatUp(
         var rssi: Int,
         var cpu: String,
         var memory: String,
-        var module: String
+        var module: Int
     )
 }

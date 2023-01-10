@@ -35,18 +35,12 @@ object AppUtils {
 
     fun genHeartBeatDataBean(context: Context): HeartBeatUp.DataBean {
         var rssi = 0
-        var module = "wifi"
-        when (getNetConnectionType(context)) {
-            0 -> {
-                module = "ethernet"
-            }
-            1 -> {
-                val wifiManager =
-                    context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-                rssi = wifiManager.connectionInfo.rssi
-            }
+        val module = getNetConnectionType(context)
+        if (module == 2) {
+            val wifiManager =
+                context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            rssi = wifiManager.connectionInfo.rssi
         }
-
         return HeartBeatUp.DataBean(
             rssi = rssi,
             module = module,
@@ -63,10 +57,10 @@ object AppUtils {
         val wifiNetInfo = connectManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
 
         if (ethNetInfo != null && ethNetInfo.isConnected) {
-            return 0
+            return 1
         }
         if (wifiNetInfo != null && wifiNetInfo.isConnected) {
-            return 1
+            return 2
         }
         return -1
     }
