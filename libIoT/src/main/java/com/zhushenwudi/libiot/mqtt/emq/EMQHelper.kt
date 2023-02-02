@@ -22,11 +22,13 @@ abstract class EMQHelper(
     private val applicationContext: Context,
     private val productKey: String,
     private val url: String,
+    mGroup: String = "group",
     private val username: String? = "public",
     private val password: String? = "admin",
     private val sku: String = productKey,
     private val updateCallback: ((md5: String, url: String) -> Unit)? = null,
     private val queryLogFunc: ((start: Long, end: Long) -> ArrayList<String>)? = null,
+    private val setGroupFunc: ((group: String) -> Unit)? = null,
     private val subscribeTopic: MutableSet<String> = mutableSetOf()
 ): MQTTHelper() {
 
@@ -37,6 +39,10 @@ abstract class EMQHelper(
     private var mqttStatusCallback: ((status: Boolean) -> Unit)? = null
 
     lateinit var cmdTopic: String
+
+    init {
+        group = mGroup
+    }
 
     /**
      * 连接 MQTT
@@ -270,6 +276,15 @@ abstract class EMQHelper(
                                         end = end,
                                         logs = logs ?: arrayListOf()
                                     )
+                                }
+                            }
+                        }
+                        "SetGroup" -> {
+                            fromJson<CommandReq<CommandReq.SetGroupBean>>(message)?.run {
+                                data?.run {
+                                    this@EMQHelper.group = group
+                                    commandResp(id = id, cmd = cmd, status = "OK")
+                                    setGroupFunc?.invoke(group)
                                 }
                             }
                         }

@@ -41,7 +41,9 @@ abstract class AliHelper(
     private val productKey: String,
     private val productSecret: String,
     private val sku: String,
+    mGroup: String = "group",
     private val queryLogFunc: ((start: Long, end: Long) -> ArrayList<String>)? = null,
+    private val setGroupFunc: ((group: String) -> Unit)? = null,
     private val subscribeTopic: MutableSet<String> = mutableSetOf()
 ) : MQTTHelper(), IOta.OtaListener {
 
@@ -56,6 +58,10 @@ abstract class AliHelper(
 
     lateinit var cmdTopic: String
     private lateinit var ntpTopic: String
+
+    init {
+        group = mGroup
+    }
 
     private fun setMqttStatus(status: Boolean) {
         mqttConnected = status
@@ -394,6 +400,15 @@ abstract class AliHelper(
                                             end = end,
                                             logs = logs ?: arrayListOf()
                                         )
+                                    }
+                                }
+                            }
+                            "SetGroup" -> {
+                                fromJson<CommandReq<CommandReq.SetGroupBean>>(message)?.run {
+                                    data?.run {
+                                        this@AliHelper.group = group
+                                        commandResp(id = id, cmd = cmd, status = "OK")
+                                        setGroupFunc?.invoke(group)
                                     }
                                 }
                             }

@@ -13,7 +13,12 @@ class MyEMQHelper(
     url = url,
     queryLogFunc = { start, end ->
         arrayListOf("111", "222")
-    }
+    },
+    setGroupFunc = {
+        // todo: 写入文件
+        App.iotGroup = it
+    },
+    mGroup = App.iotGroup
 ) {
 
     override fun respCallBack(topic: String, message: String) {

@@ -20,4 +20,9 @@ data class CommandReq<T>(
         val begin: String,
         val end: String
     )
+
+    @Keep
+    data class SetGroupBean(
+        val group: String
+    )
 }

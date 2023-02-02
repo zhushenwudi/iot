@@ -19,5 +19,10 @@ class MyAliHelper(
     sku = sku,
     queryLogFunc = { start, end ->
         arrayListOf("111", "222")
-    }
+    },
+    setGroupFunc = {
+        // todo: 写入文件
+        App.iotGroup = it
+    },
+    mGroup = App.iotGroup
 )

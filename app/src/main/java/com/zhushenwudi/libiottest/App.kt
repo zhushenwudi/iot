@@ -13,10 +13,11 @@ class App: Application() {
         val storagePath =
             Environment.getExternalStorageDirectory().absolutePath + File.separator.toString() + "group"
         if (FileUtils.isFileExists(storagePath)) {
-            val group = FileIOUtils.readFileToString(storagePath)
-//            sp.putString("group", group)
-        } else {
-//            sp.putString("group", "dev")
+            iotGroup = FileIOUtils.readFileToString(storagePath)
         }
+    }
+
+    companion object {
+        var iotGroup: String = "group"
     }
 }

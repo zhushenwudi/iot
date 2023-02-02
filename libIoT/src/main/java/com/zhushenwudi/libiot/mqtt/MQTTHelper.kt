@@ -40,7 +40,8 @@ abstract class MQTTHelper {
                     data = CommandResp.DataBean(
                         cmd = cmd,
                         status = status
-                    )
+                    ),
+                    group = group
                 )
             )
         )
