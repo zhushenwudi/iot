@@ -286,7 +286,12 @@ abstract class AliHelper(
      */
     final override fun versionUp(versionName: String, sku: String) {
         val postVersion = topicHeader + "version"
-        val message = toJson(VersionUp(data = VersionUp.DataBean(firmware = versionName, sku = sku), group = group))
+        val message = toJson(
+            VersionUp(
+                data = VersionUp.DataBean(firmware = versionName, sku = sku),
+                group = group
+            )
+        )
         publish(postVersion, message)
     }
 
@@ -308,14 +313,13 @@ abstract class AliHelper(
      * 心跳上报
      */
     final override fun heartBeatUp() {
-        val postHeardBeats = topicHeader + "heartbeat"
         val message = toJson(
             HeartBeatUp(
                 data = AppUtils.genHeartBeatDataBean(applicationContext),
                 group = group
             )
         )
-        publish(postHeardBeats, message)
+        publish(topicHeader + "event", message)
     }
 
     /**

@@ -8,7 +8,10 @@ import android.util.Log
 import com.zhushenwudi.libiot.AppUtils
 import com.zhushenwudi.libiot.AppUtils.fromJson
 import com.zhushenwudi.libiot.AppUtils.toJson
-import com.zhushenwudi.libiot.model.*
+import com.zhushenwudi.libiot.model.CommandReq
+import com.zhushenwudi.libiot.model.HeartBeatUp
+import com.zhushenwudi.libiot.model.Offline
+import com.zhushenwudi.libiot.model.VersionUp
 import com.zhushenwudi.libiot.mqtt.MQTTHelper
 import com.zhushenwudi.libiot.service.TickTimeReceiver
 import dev.utils.app.DeviceUtils
@@ -30,7 +33,7 @@ abstract class EMQHelper(
     private val queryLogFunc: ((start: Long, end: Long) -> ArrayList<String>)? = null,
     private val setGroupFunc: ((group: String) -> Unit)? = null,
     private val subscribeTopic: MutableSet<String> = mutableSetOf()
-): MQTTHelper() {
+) : MQTTHelper() {
 
     private var initial = true
     var mqttClient: MqttAndroidClient? = null
@@ -166,22 +169,43 @@ abstract class EMQHelper(
      * 版本上报
      */
     final override fun versionUp(versionName: String, sku: String) {
-        publish(topicHeader + "version", toJson(VersionUp(data = VersionUp.DataBean(firmware = versionName, sku = sku), group = group)))
+        publish(
+            topicHeader + "version",
+            toJson(
+                VersionUp(
+                    data = VersionUp.DataBean(firmware = versionName, sku = sku),
+                    group = group
+                )
+            )
+        )
     }
 
     /**
      * 断线上报
      */
     final override fun netOfflineUp(start: Long) {
-        publish(topicHeader + "offline", toJson(Offline(data = Offline.DataBean(start = start, end = System.currentTimeMillis()), group = group)))
+        publish(
+            topicHeader + "offline",
+            toJson(
+                Offline(
+                    data = Offline.DataBean(start = start, end = System.currentTimeMillis()),
+                    group = group
+                )
+            )
+        )
     }
 
     /**
      * 心跳上报
      */
     final override fun heartBeatUp() {
-        val message = toJson(HeartBeatUp(data = AppUtils.genHeartBeatDataBean(applicationContext), group = group))
-        publish(topicHeader + "heartbeat", message)
+        val message = toJson(
+            HeartBeatUp(
+                data = AppUtils.genHeartBeatDataBean(applicationContext),
+                group = group
+            )
+        )
+        publish(topicHeader + "event", message)
     }
 
     /**
@@ -253,7 +277,10 @@ abstract class EMQHelper(
                             fromJson<CommandReq<CommandReq.VersionInfo>>(message)?.run {
                                 data?.run {
                                     if ("armeabi-v7a" in DeviceUtils.getABIs()) {
-                                        if (Version(dev.utils.app.AppUtils.getAppVersionName()) < Version(version)) {
+                                        if (Version(dev.utils.app.AppUtils.getAppVersionName()) < Version(
+                                                version
+                                            )
+                                        ) {
                                             if (url != null && md5 != null) {
                                                 updateCallback?.invoke(md5, url)
                                             }
