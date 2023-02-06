@@ -19,6 +19,7 @@ data class HeartBeatUp(
         var rssi: Int,
         var cpu: String,
         var memory: String,
+        var time: Long = System.currentTimeMillis() / 1000,
         var module: Int
     )
 }
